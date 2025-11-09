@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  password    String
+  posts       Post[]   @relation("UserPosts")        // Posts they started
+  replies     Post[]   @relation("UserReplies")      // Posts they replied to
+  createdAt   DateTime @default(now())
+}
+
+model Post {
+  id           String   @id @default(cuid())
+  value        Float
+  authorId     String
+  author       User     @relation("UserPosts", fields: [authorId], references: [id])
+  
+  replierId    String?  // ← NEW: Who replied (null for root posts)
+  replier      User?    @relation("UserReplies", fields: [replierId], references: [id])
+
+  parentId     String?
+  parent       Post?    @relation("PostReplies", fields: [parentId], references: [id])
+  replies      Post[]   @relation("PostReplies")
+
+  operation    String?
+  rightValue   Float?
+  createdAt    DateTime @default(now())
+}
